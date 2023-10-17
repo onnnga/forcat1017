@@ -1,0 +1,86 @@
+//쿼리dsl 사용 명시
+buildscript {
+    ext {
+        queryDslVersion = "5.0.0"
+    }
+}
+
+plugins {
+    id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '2.7.16-SNAPSHOT'//스프링 부트 버전 명시
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+    id 'com.ewerk.gradle.plugins.querydsl' version '1.0.10' //쿼리dsl 관련 설정 추가
+}
+
+group = 'com.forcat'
+version = '0.0.1-SNAPSHOT'
+
+//자바 버전 명시
+java { sourceCompatibility = '17' }
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+    maven { url 'https://repo.spring.io/snapshot' }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'//데이터, DB 연결용
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'//타임리프 사용 명시
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'// 롬북 의존성 추가
+    annotationProcessor 'org.projectlombok:lombok'// 롬북 의존성 추가
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'//maraiaDB 사용 명시
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.1.0'//페이지 레이아웃  기능 사용
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'//톰캣 9 사용 명시
+    implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
+    annotationProcessor(
+            "javax.persistence:javax.persistence-api",
+            "javax.annotation:javax.annotation-api",
+            "com.querydsl:querydsl-apt:${queryDslVersion}:jpa")
+    implementation 'org.modelmapper:modelmapper:3.1.0'//DTO - Entity 자동 오브젝트 매핑
+    implementation 'org.springframework.boot:spring-boot-starter-security'//스프링 스큐리티 사용 명시
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
+    //쿼리dsl 사용 명시
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'//소셜 로그인 사용 명시
+    // 타임리프에서 날짜시간 포멧팅 담당 https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-java8time
+    implementation group: 'org.thymeleaf.extras', name: 'thymeleaf-extras-java8time', version: '3.0.4.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'//유효성 검사
+
+    //스웩 사용 명시 : API 목록을 웹에서 확인 및 테스트할 수 있게 도와주는 라이브러리
+    implementation 'io.springfox:springfox-boot-starter:3.0.0'
+    implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+    //썸네일
+    implementation 'net.coobird:thumbnailator:0.4.16'
+
+//테스트용
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testCompileOnly 'org.projectlombok:lombok' //테스트 롬북 의존성 추가
+    testAnnotationProcessor 'org.projectlombok:lombok' //테스트 롬북 의존성 추가
+}
+
+tasks.named('test') { useJUnitPlatform() }
+
+//쿼리dsl 관련 설정 추가
+def querydslDir = "$buildDir/generated/querydsl"
+
+querydsl {
+    jpa = true
+    querydslSourcesDir = querydslDir
+}
+
+sourceSets { main.java.srcDir querydslDir }
+
+configurations { querydsl.extendsFrom compileClasspath }
+
+compileQuerydsl { options.annotationProcessorPath = configurations.querydsl }
+//쿼리dsl 관련 설정 추가 끝
